@@ -10,22 +10,22 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
- *  Flood Alert
+ *  Christmas Tree Water Monitor
  *
- *  Author: SmartThings
+ *  Author: SmartThings Adapted by Palzer
  */
 definition(
-    name: "Flood Alert!",
+    name: "Christmas Tree Water Monitor",
     namespace: "smartthings",
-    author: "SmartThings",
-    description: "Get a push notification or text message when water is detected where it doesn't belong.",
-    category: "Safety & Security",
+    author: "Palzer",
+    description: "Get a push notification or text message when the Christmas tree is dry.",
+    category: "Convenience",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/water_moisture.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/water_moisture@2x.png"
 )
 
 preferences {
-	section("When there's water detected...") {
+	section("When there's no water detected...") {
 		input "alarm", "capability.waterSensor", title: "Where?"
 	}
 	section("Send a notification to...") {
@@ -36,28 +36,28 @@ preferences {
 }
 
 def installed() {
-	subscribe(alarm, "water.wet", waterWetHandler)
+	subscribe(alarm, "water.dry", waterDryHandler)
 }
 
 def updated() {
 	unsubscribe()
-	subscribe(alarm, "water.wet", waterWetHandler)
+	subscribe(alarm, "water.dry", waterDryHandler)
 }
 
-def waterWetHandler(evt) {
+def waterDryHandler(evt) {
 	def deltaSeconds = 60
 
 	def timeAgo = new Date(now() - (1000 * deltaSeconds))
 	def recentEvents = alarm.eventsSince(timeAgo)
 	log.debug "Found ${recentEvents?.size() ?: 0} events in the last $deltaSeconds seconds"
 
-	def alreadySentSms = recentEvents.count { it.value && it.value == "wet" } > 1
+	def alreadySentSms = recentEvents.count { it.value && it.value == "dry" } > 1
 
 	if (alreadySentSms) {
 		log.debug "SMS already sent within the last $deltaSeconds seconds"
 	} else {
-		def msg = "${alarm.displayName} is wet!"
-		log.debug "$alarm is wet, texting phone number"
+		def msg = "${alarm.displayName} is dry!"
+		log.debug "$alarm is dry, texting phone number"
 
 		if (location.contactBookEnabled) {
 			sendNotificationToContacts(msg, recipients)
